@@ -46,8 +46,6 @@ Matching is heuristic and should be evaluated with domain-labeled pairs before p
 
 ## AI assistance transparency
 
-## AI assistance transparency
-
 AI assistance were used as a supporting resource during development, primarily for reviewing implementation approaches, exploring reconciliation edge cases, and improving documentation. The final implementation decisions, validation, and testing were handled by the submitter. Matching decisions are heuristic rather than verified business truth.
 
 ## Time spent
