@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Event Sync Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: #f6f7fb;
+        }
+
+        .meeting {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .conflict {
+            color: #b42318;
+            font-weight: bold;
+        }
+
+        .source {
+            color: #555;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Event Sync Dashboard</h1>
+    <p>Unified CRM and Calendar meetings</p>
+
+    <div id="meetings">Loading meetings...</div>
+
+    <script>
+        async function loadMeetings() {
+            const container = document.getElementById("meetings");
+
+            try {
+                const response = await fetch("/api/meetings/");
+
+                if (!response.ok) {
+                    throw new Error("Failed to load meetings");
+                }
+
+                const data = await response.json();
+                const meetings = Array.isArray(data)
+                    ? data
+                    : data.results;
+
+                container.replaceChildren();
+
+                meetings.forEach(meeting => {
+                    const card = document.createElement("div");
+                    card.className = "meeting";
+
+                    const heading = document.createElement("h3");
+                    heading.textContent = meeting.title;
+
+                    const time = document.createElement("p");
+                    time.textContent =
+                        "Time: " + (meeting.start_time || "Unknown");
+
+                    const location = document.createElement("p");
+                    location.textContent =
+                        "Location: " + (meeting.location || "Unknown");
+
+                    const sources = document.createElement("p");
+                    sources.className = "source";
+                    sources.textContent = "Sources: " +
+                        meeting.sources
+                            .map(s => `${s.source} (${s.external_id})`)
+                            .join(", ");
+
+                    card.append(heading, time, location, sources);
+                    const provenance = document.createElement("p");
+                    provenance.className = "source";
+                    provenance.textContent = "Field origins: " + Object.entries(meeting.provenance || {}).map(([k,v]) => `${k}: ${v}`).join("; ");
+                    card.appendChild(provenance);
+
+                    if (meeting.conflicts.length > 0) {
+                        const conflict = document.createElement("p");
+                        conflict.className = "conflict";
+                        conflict.textContent =
+                            `${meeting.conflicts.length} conflict(s) detected`;
+                        card.appendChild(conflict);
+                        const details = document.createElement("ul");
+                        meeting.conflicts.forEach(item => {
+                            const line = document.createElement("li");
+                            line.textContent = `${item.field}: CRM = ${item.crm_value ?? "Unknown"}; Calendar = ${item.calendar_value ?? "Unknown"}`;
+                            details.appendChild(line);
+                        });
+                        card.appendChild(details);
+                    }
+
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                container.textContent = error.message;
+            }
+        }
+
+        loadMeetings();
+    </script>
+</body>
+</html>
